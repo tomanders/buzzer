@@ -2,7 +2,7 @@
 <header class="hero-unit" id="banner">
     <div class="container">
         <h1>Buzzer</h1>
-        <p class="lead">Lets Get Buzzed</p>
+        <p class="lead">Lets Get Buzzed</p>        
     </div>
 </header>
 
@@ -19,7 +19,7 @@
                 </form>
             </div>
             <div class="col-md-6" ng-if="!newUser">
-                <button type="button" class="buzzer btn btn-primary btn-large btn-block ">BUZZIT!</button>
+                <button type="button" class="buzzer btn btn-primary btn-large btn-block " ng-click="buzzer.buzz()">BUZZIT!</button>
                 <h2>User info</h2>
                 <table class="table table-responsive">
                     <tr>

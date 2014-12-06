@@ -1,5 +1,21 @@
 'use strict';
 
+var gamePlay = (function (){
+    //state
+    var score = 0;
+
+    //modifiers
+    
+    //actions
+    var press = function (username, socket){
+        socket.emit("buzz", username, function (status){
+            //say if first user.
+            return false;
+        });
+    };
+    
+}());
+
 angular.module('buzzerApp')
     .controller('MainCtrl', function($scope, $http, socket) {
         $scope.buzzer = {};
@@ -23,7 +39,8 @@ angular.module('buzzerApp')
         $scope.buzzer.registerNewUser = function (){
             if ($scope.newUser){
                 var username = $scope.buzzer.newUser
-                //socket.emit("new:user", $scope.myself);
+
+                //check with server if username is taken
                 socket.emit("new:user", username,
                             function(userExists){
                                 if (!userExists){
@@ -42,6 +59,17 @@ angular.module('buzzerApp')
         socket.on("update:user", function (data){
             $scope.buzzer.users = data.users;            
         });
+
+        $scope.buzzer.buzz = function (){
+            socket.emit("buzz", $scope.myself.name, function (res){
+                console.log(res);
+                if (res.first){
+                    $scope.errormsg = "You made it!";
+                }else{
+                    $scope.errormsg = "To late!";
+                }
+            });
+        }
         
         $scope.buzzer.killUser = function (){
             $scope.newUser = true;
