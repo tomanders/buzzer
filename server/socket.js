@@ -5,23 +5,42 @@ var buzzBoard = require("./buzzBoard");
 // Keep track of which names are used so that there are no duplicates
 var users = (function() {
     var users = [];
-    var groups = {};
+    var groups = {
+        "Group 1" : [],
+        "Group 2" : [],
+        "Group 3" : [],
+        "Group 4" : [],
+        "Group 5" : []
+    };
 
     //group handling
     var setGroup = function(name, group){
-        var userExists = _.findIndex(users, {'name' : name});
-        if (!name || userExists !== -1) {
+        var userIndex = _.findIndex(users, {'name' : name});
+        console.log(name);
+        console.log(userIndex);
+        if (!name || userIndex == -1) {
             return false;
         } else {
             var groupExists = _.contains(groups, group);
             if (groupExists){
-                groups[group].push({'name' : name, 'score' : 0});
+                groups[group].push(users[userIndex]);
             }else{
-                groups[group] = [{'name' : name, 'score' : 0}];
+                groups[group] = [users[userIndex],];
             }
+            users[userIndex].group = group;
             return true;
-        }        
+        }
     };
+
+    var getGroups = function (){
+        return groups;
+    };
+
+    var getGroupScore = function (group){
+        return 4;
+    };
+
+
     //user handling
     var claim = function(name) {
         var userExists = _.findIndex(users, {'name' : name});
@@ -34,7 +53,7 @@ var users = (function() {
     };
 
     // get users with score
-    var get = function() {        
+    var get = function() {
         return users;
     };
 
@@ -50,43 +69,37 @@ var users = (function() {
         if (!name || userIndex == -1) {
             return false;
         }
-        
+
         users[userIndex].score = users[userIndex].score + score;
         console.log(users);
         return true;
-        
+
     }
     return {
         claim: claim,
         free: free,
         get: get,
         setGroup : setGroup,
+        getGroups : getGroups,
         giveScore : giveScore
     };
 }());
 
 // export function for listening to the socket
 module.exports = function(socket) {
-    
+
     var leaderList = buzzBoard.get();
 
     // send the new user their name and a list of users
     socket.emit('server:init', {
-        users: users.get()
-    });
-
-    // broadcast a user's message to other users
-    socket.on('send:message', function(data) {
-        socket.broadcast.emit('send:message', {
-            user: name,
-            text: data.message
-        });
+        users: users.get(),
+        groups : users.getGroups()
     });
 
     // validate a user's name, and broadcast all users on success
     socket.on('players:newuser', function(data, fn) {
         if (users.claim(data)) {
-            socket.broadcast.emit('server:update:user', {               
+            socket.broadcast.emit('server:update:user', {
                 users: users.get()
             });
 
@@ -123,7 +136,8 @@ module.exports = function(socket) {
         var score = 10;
         var scoreGiven = users.giveScore(score, user);
         console.log("gave score: " + scoreGiven);
-        if (scoreGiven){            
+        console.log(users.getGroups());
+        if (scoreGiven){
             socket.emit('server:update:user', {
                 users : users.get()
             });
@@ -136,8 +150,24 @@ module.exports = function(socket) {
     socket.on('gamemaster:wrong', function (user){
         console.log("wrong:" + user);
     });
-    
-    
+
+    socket.on('gamemaster:group:adduser', function (data){
+        console.log(data);
+        var status = users.setGroup(data.user, data.group);
+        console.log(status);
+        if (status){
+            console.log("emitting updated groups");
+            console.log(users.get());
+
+            socket.emit('server:update:user', {
+                users : users.get()
+            });
+            socket.broadcast.emit('server:update:user', {
+                users : users.get()
+            });
+        }
+    });
+
     // clean up when a user leaves, and broadcast it to other users
     /*
     socket.on('disconnect', function() {
