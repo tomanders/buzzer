@@ -1,0 +1,48 @@
+
+<header class="hero-unit" id="banner">
+    <div class="container">
+        <h1>Gamemaster</h1>
+        <p class="lead">Controll your game!</p>        
+    </div>
+</header>
+
+<div class="container">
+    <div class="col-md-6">
+        <h2>Actions</h2>
+        <button type="button" class="btn btn-primary btn-large btn-block "
+                ng-click="gamemaster.startRound()">
+                        Start game
+        </button>
+        
+    </div>
+
+    <div class="col-md-6">
+        <h2>Current Users</h2>
+        <table class="table table-responsive">
+            <tr>
+                <th>Name</th>
+                <th>Score</th>
+            </tr>
+            <tr ng-repeat="user in users">
+                <td>{{user.name}}</td>
+                <td>{{user.score}}</td>
+            </tr>
+        </table>
+    </div>    
+</div>
+
+<div class="container">
+    <div class="col-md-12">
+        <h2>Buzz Queue</h2>
+        <table class="table table-responsive">
+            <tr ng-repeat="user in buzzqueue">
+                <th>Name</th>
+                <td>{{user}}</td>
+                <td><button type="button" class="btn btn-danger btn-small" ng-click="gamemaster.correct(user)">Correct</button></td>
+
+                <td><button type="button" class="btn btn-danger btn-small" ng-click="gamemaster.wrong(user)">Wrong</button></td>
+            </tr>
+        </table>
+
+    </div>
+</div>

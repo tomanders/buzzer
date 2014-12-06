@@ -21,8 +21,9 @@ angular.module('buzzerApp')
         $scope.buzzer = {};
         $scope.errormsg = "";
         $scope.buzzer.users = [];
-
-        socket.on("init", function(data){
+        $scope.buzzerButton = {clicked : false, text : "BUZZIT!"};
+        
+        socket.on("server:init", function(data){
             $scope.buzzer.users = data.users;
         });
 
@@ -41,7 +42,7 @@ angular.module('buzzerApp')
                 var username = $scope.buzzer.newUser
 
                 //check with server if username is taken
-                socket.emit("new:user", username,
+                socket.emit("players:newuser", username,
                             function(userExists){
                                 if (!userExists){
                                     $scope.errormsg = "User exists";
@@ -56,20 +57,9 @@ angular.module('buzzerApp')
             }            
         };
 
-        socket.on("update:user", function (data){
+        socket.on("server:update:user", function (data){
             $scope.buzzer.users = data.users;            
         });
-
-        $scope.buzzer.buzz = function (){
-            socket.emit("buzz", $scope.myself.name, function (res){
-                console.log(res);
-                if (res.first){
-                    $scope.errormsg = "You made it!";
-                }else{
-                    $scope.errormsg = "To late!";
-                }
-            });
-        }
         
         $scope.buzzer.killUser = function (){
             $scope.newUser = true;
@@ -78,11 +68,32 @@ angular.module('buzzerApp')
             });
             
             localStorage.removeItem('user');
-            socket.emit("kill:user", $scope.myself);
+            socket.emit("players:killuser", $scope.myself);
 
             $scope.myself = {};            
             
         };
         //end user handling
+
+        //game logic
+        $scope.buzzer.buzz = function (){
+            socket.emit("players:buzz", $scope.myself.name, function (res){
+                if (res.first){
+                    $scope.buzzer.first = true;
+                    $scope.buzzerButton.text = "FIRST!"
+                }else{
+                    $scope.buzzerButton.text = "NOT FIRST"
+                    $scope.buzzer.first = false;
+                }
+                $scope.buzzerButton.clicked = true;
+            });
+        }
+        
+        socket.on("server:newround", function(data){
+            $scope.buzzerButton.text = "BUZZIT!"            
+            $scope.buzzerButton.clicked = false;
+            $scope.buzzer.first = false;
+        });
+
         
     });

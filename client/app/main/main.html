@@ -18,30 +18,46 @@
                     <input type="submit" name="GO"/>
                 </form>
             </div>
+            
             <div class="col-md-6" ng-if="!newUser">
-                <button type="button" class="buzzer btn btn-primary btn-large btn-block " ng-click="buzzer.buzz()">BUZZIT!</button>
-                <h2>User info</h2>
-                <table class="table table-responsive">
-                    <tr>
-                        <th>Name</th>
-                        <td>{{myself.name}}</td>
-                        <td><button type="button" class="btn btn-danger btn-small" ng-click="buzzer.killUser()">Kill</button></td>
-                    </tr>
-                </table>
+                <button type="button" class="buzzer btn btn-primary btn-large btn-block "
+                        ng-click="buzzer.buzz()" 
+                        ng-disabled="buzzerButton.clicked">
+                        {{buzzerButton.text}}
+                </button>
             </div>
 
             <div class="col-md-6">
                 <h2>Current Users</h2>
-                <ul class="users" ng-repeat="user in buzzer.users">
-                    <li>{{user.name}}</li>
-                </ul>
+                <table class="table table-responsive">
+                    <tr>
+                        <th>Name</th>
+                        <th>Score</th>
+                    </tr>
+                    <tr ng-repeat="user in buzzer.users">
+                        <td>{{user.name}}</td>
+                        <td>{{user.score}}</td>
+                    </tr>
+                </table>
             </div>            
         </div>
     </div>
 </div>
 
 <footer class="footer">
-    <div class="container">
-        <p>footer</p>
+    <div class="container" ng-if="!newUser">
+        <div class="col-md-12">
+            <h2>User info</h2>
+            <table class="table table-responsive">
+                <tr>
+                    <th>Name</th>
+                    <th>Action</th>
+                </tr>            
+                <tr>
+                    <td>{{myself.name}}</td>
+                    <td><button type="button" class="btn btn-danger btn-small" ng-click="buzzer.killUser()">Leave</button></td>
+                </tr>
+            </table>
+        </div>
     </div>
 </footer>

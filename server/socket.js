@@ -44,11 +44,24 @@ var users = (function() {
         });
     };
 
+    var giveScore = function (score, name){
+        var userIndex = _.findIndex(users, {'name' : name});
+
+        if (!name || userIndex == -1) {
+            return false;
+        }
+        
+        users[userIndex].score = users[userIndex].score + score;
+        console.log(users);
+        return true;
+        
+    }
     return {
         claim: claim,
         free: free,
         get: get,
-        setGroup : setGroup
+        setGroup : setGroup,
+        giveScore : giveScore
     };
 }());
 
@@ -58,7 +71,7 @@ module.exports = function(socket) {
     var leaderList = buzzBoard.get();
 
     // send the new user their name and a list of users
-    socket.emit('init', {
+    socket.emit('server:init', {
         users: users.get()
     });
 
@@ -71,9 +84,9 @@ module.exports = function(socket) {
     });
 
     // validate a user's name, and broadcast all users on success
-    socket.on('new:user', function(data, fn) {
+    socket.on('players:newuser', function(data, fn) {
         if (users.claim(data)) {
-            socket.broadcast.emit('update:user', {               
+            socket.broadcast.emit('server:update:user', {               
                 users: users.get()
             });
 
@@ -84,20 +97,46 @@ module.exports = function(socket) {
     });
 
     // remove user, and broadcast all users
-    socket.on('kill:user', function(data) {
+    socket.on('players:killuser', function(data) {
         users.free(data.name);
-        socket.broadcast.emit('update:user', {
+        socket.broadcast.emit('server:update:user', {
             users: users.get()
         });
     });
 
-    socket.on('buzz', function (data, fn){
-        console.log("we have a buzz");
+    socket.on('players:buzz', function (data, fn){
+        console.log("we have a buzz from: " + data);
         var res = buzzBoard.registerPress(data);
+        socket.broadcast.emit('server:buzz:update', buzzBoard.get());
         console.log(res);
         fn(res);
         console.log(buzzBoard.get());
     });
+
+    socket.on('gamemaster:newround', function (fn){
+        buzzBoard.clearRound();
+        socket.broadcast.emit('server:newround');
+    });
+
+    socket.on('gamemaster:correct', function (user){
+        console.log("correct: " + user);
+        var score = 10;
+        var scoreGiven = users.giveScore(score, user);
+        console.log("gave score: " + scoreGiven);
+        if (scoreGiven){            
+            socket.emit('server:update:user', {
+                users : users.get()
+            });
+            socket.broadcast.emit('server:update:user', {
+                users : users.get()
+            });
+        }
+    });
+
+    socket.on('gamemaster:wrong', function (user){
+        console.log("wrong:" + user);
+    });
+    
     
     // clean up when a user leaves, and broadcast it to other users
     /*
