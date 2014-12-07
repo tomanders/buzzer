@@ -42,8 +42,14 @@ angular.module('buzzerApp')
             socket.emit("gamemaster:wrong", user);
         };
 
-        $scope.gamemaster.addGroup = function(){
-            socket.emit("gamemaster:addgroup", $scope.groups.newgroup);
+        $scope.gamemaster.newGroup = function(){
+            socket.emit("gamemaster:addgroup", $scope.groups.newgroup, function(status){
+                if (status){
+                    $scope.groups.registered.push($scope.groups.newgroup);
+                    $scope.groups.newgroup = "";                    
+                }
+                    
+            });
         };
 
         $scope.gamemaster.addToGroup = function (user){

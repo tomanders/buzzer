@@ -36,6 +36,13 @@
                 </td>
             </tr>
         </table>
+        <h2>Add group</h2>
+        <p class="error" ng-if="errormsg">{{errormsg}}</p> 
+        <form ng-submit="gamemaster.newGroup()" name="newuser">
+            <label for="name">Name:</label>
+            <input type="text" name="name" ng-model="groups.newgroup"/>
+            <input type="submit" name="GO"/>
+        </form>        
     </div>    
 </div>
 

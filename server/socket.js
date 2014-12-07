@@ -146,7 +146,7 @@ module.exports = function(socket) {
     socket.on('players:killuser', function(data) {
         users.free(data.name);
         buzzBoard.killUser(data.name);
-        console.log(buzzBoard.get());
+        
         socket.broadcast.emit('server:buzz:update', buzzBoard.get());
         socket.broadcast.emit('server:update:user', {
             users: users.get()
@@ -200,6 +200,14 @@ module.exports = function(socket) {
             });
             //send scoreboard to gamemaster
             socket.emit('server:score:update', users.getGroupsScore());
+        }
+    });
+
+    socket.on('gamemaster:addgroup', function(name, fn){
+        var ok = users.createGroup(name);
+        if (ok){
+            socket.emit('server:score:update', users.getGroupsScore());
+            fn(true);
         }
     });
 
