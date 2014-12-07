@@ -1,21 +1,5 @@
 'use strict';
 
-var gamePlay = (function (){
-    //state
-    var score = 0;
-
-    //modifiers
-
-    //actions
-    var press = function (username, socket){
-        socket.emit("buzz", username, function (status){
-            //say if first user.
-            return false;
-        });
-    };
-
-}());
-
 angular.module('buzzerApp')
     .controller('MainCtrl', function($scope, $http, socket) {
         $scope.buzzer = {};
