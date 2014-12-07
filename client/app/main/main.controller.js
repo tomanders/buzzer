@@ -21,7 +21,7 @@ angular.module('buzzerApp')
         $scope.buzzer = {};
         $scope.errormsg = "";
         $scope.buzzer.users = [];
-        $scope.buzzerButton = {clicked : false, text : "BUZZIT!"};
+        $scope.buzzerButton = {clicked : true, text : "Wait for round to start"};
         
         socket.on("server:init", function(data){
             $scope.buzzer.users = data.users;
@@ -47,7 +47,7 @@ angular.module('buzzerApp')
                                 if (!userExists){
                                     $scope.errormsg = "User exists";
                                 }else{
-                                    $scope.myself = {name : username};
+                                    $scope.myself = {name : username, score: 0, group: false};
                                     $scope.buzzer.users.push($scope.myself);
                                     localStorage.setItem("user", JSON.stringify($scope.myself));
                                     $scope.newUser = false;
