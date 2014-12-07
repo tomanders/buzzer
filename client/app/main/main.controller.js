@@ -6,21 +6,30 @@ angular.module('buzzerApp')
         $scope.errormsg = "";
         $scope.buzzer.users = [];
         $scope.buzzerButton = {clicked : true, text : "Wait for round to start"};
+        $scope.newUser = true;
+        $scope.myself = {};
 
+        
         socket.on("server:init", function(data){
             $scope.buzzer.users = data.users;
+
+            //check if user stored locally, in case of reload.
+            var user = localStorage.getItem("user");
+            if (user){
+                var userdata = JSON.parse(user),
+                    userReged = _.findIndex(data.users, function(user){return user.name == userdata.name});
+                
+                if (userReged != -1){
+                    $scope.newUser = false;
+                    $scope.myself = userdata;
+                }else{
+                    localStorage.removeItem('user');
+                }                
+            }
+
         });
 
         //user handling
-        //check if new user
-        var user = localStorage.getItem("user");
-        $scope.newUser = true;
-        $scope.myself = {};
-        if (user){
-            $scope.newUser = false;
-            $scope.myself = JSON.parse(user);
-        }
-
         $scope.buzzer.registerNewUser = function (){
             if ($scope.newUser){
                 var username = $scope.buzzer.newUser
