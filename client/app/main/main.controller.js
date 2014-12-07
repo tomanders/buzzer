@@ -5,7 +5,7 @@ var gamePlay = (function (){
     var score = 0;
 
     //modifiers
-    
+
     //actions
     var press = function (username, socket){
         socket.emit("buzz", username, function (status){
@@ -13,7 +13,7 @@ var gamePlay = (function (){
             return false;
         });
     };
-    
+
 }());
 
 angular.module('buzzerApp')
@@ -22,7 +22,7 @@ angular.module('buzzerApp')
         $scope.errormsg = "";
         $scope.buzzer.users = [];
         $scope.buzzerButton = {clicked : true, text : "Wait for round to start"};
-        
+
         socket.on("server:init", function(data){
             $scope.buzzer.users = data.users;
         });
@@ -34,9 +34,9 @@ angular.module('buzzerApp')
         $scope.myself = {};
         if (user){
             $scope.newUser = false;
-            $scope.myself = JSON.parse(user);            
+            $scope.myself = JSON.parse(user);
         }
-        
+
         $scope.buzzer.registerNewUser = function (){
             if ($scope.newUser){
                 var username = $scope.buzzer.newUser
@@ -54,24 +54,24 @@ angular.module('buzzerApp')
                                 }
                             }
                 );
-            }            
+            }
         };
 
         socket.on("server:update:user", function (data){
-            $scope.buzzer.users = data.users;            
+            $scope.buzzer.users = data.users;
         });
-        
+
         $scope.buzzer.killUser = function (){
             $scope.newUser = true;
             _.remove($scope.buzzer.users, function (item){
-                return item.name == $scope.myself.name; 
+                return item.name == $scope.myself.name;
             });
-            
+
             localStorage.removeItem('user');
             socket.emit("players:killuser", $scope.myself);
 
-            $scope.myself = {};            
-            
+            $scope.myself = {};
+
         };
         //end user handling
 
@@ -88,12 +88,12 @@ angular.module('buzzerApp')
                 $scope.buzzerButton.clicked = true;
             });
         }
-        
+
         socket.on("server:newround", function(data){
-            $scope.buzzerButton.text = "BUZZIT!"            
+            $scope.buzzerButton.text = "BUZZIT!"
             $scope.buzzerButton.clicked = false;
             $scope.buzzer.first = false;
         });
 
-        
+
     });

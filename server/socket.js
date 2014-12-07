@@ -29,7 +29,7 @@ var users = (function() {
             //push and add group to user if exists, else user is groupless
             if (groupExists){
                 groups[group].push(user);
-                user.group = group;                
+                user.group = group;
             }
             return true;
         }
@@ -43,7 +43,7 @@ var users = (function() {
         }
         return false;
     }
-    
+
     var getGroups = function (){
         return groups;
     };
@@ -61,7 +61,7 @@ var users = (function() {
                         }
                        );
     };
-    
+
     var getGroupScore = function (group){
         var totals = getGroupsScore();
         return totals[group];
@@ -121,8 +121,8 @@ var users = (function() {
 // export function for listening to the socket
 module.exports = function(socket) {
     var leaderList = buzzBoard.get();
-    
-    
+
+
     // send the new user their name and a list of users
     socket.emit('server:init', {
         users: users.get(),

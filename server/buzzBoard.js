@@ -17,18 +17,18 @@ var buzzList =  function (){
         return {status : false, first : false};
 
     }
-    
+
     var get = function (){
         return buzzlist;
     }
-    
+
     var clearRound = function(){
         buzzlist = [];
     }
     var killUser = function (name){
         _.remove(buzzlist, function (user ){ return name == user});
     }
-    
+
     return {
         registerPress : registerPress,
         get : get,

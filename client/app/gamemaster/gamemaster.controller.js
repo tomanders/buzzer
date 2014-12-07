@@ -9,7 +9,7 @@ angular.module('buzzerApp')
         $scope.roundButtonText = "Start round!";
         $scope.groups = {};
         $scope.groups.registered = $scope.groups.scoreboard = {};
-        
+
         socket.on("server:init", function(data){
             $scope.users = data.users;
             $scope.groups.registered = _.keys(data.groups);
