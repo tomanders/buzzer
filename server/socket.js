@@ -15,14 +15,23 @@ var users = (function() {
 
     //group handling
     var setGroup = function(name, group){
+        //OBS, something is of here, when changing groups after a while
+        // something goes wrong, another user gets transfered..
+        // test with gamemaster and give a score and change groups several times.
+        
         var userIndex = _.findIndex(users, {'name' : name});
-        console.log(name);
-        console.log(userIndex);
         if (!name || userIndex == -1) {
             return false;
         } else {
-            var groupExists = _.contains(groups, group);
+            console.log(group);
+            var groupExists = _.contains(_.keys(groups), group);
+            var user = users[userIndex];
+            
             if (groupExists){
+                //check if user is in another group and remove before changing.
+                if (user.group){
+                    groups[user.group].pop(user);
+                }
                 groups[group].push(users[userIndex]);
             }else{
                 groups[group] = [users[userIndex],];
@@ -37,7 +46,29 @@ var users = (function() {
     };
 
     var getGroupScore = function (group){
-        return 4;
+        var totals = _.mapValues(groups,
+                                 function (users) {
+                                     var score = _.pluck(users, 'score');
+                                     var sum = _.reduce(score,
+                                                        function(sum, num) {
+                                                            return sum + num}
+                                                       );
+                                     return sum || 0
+                                 }
+                                );
+        return totals[group];
+    };
+    var getGroupsScore = function (){
+        return totals = _.mapValues(groups,
+                                 function (users) {
+                                     var score = _.pluck(users, 'score');
+                                     var sum = _.reduce(score,
+                                                        function(sum, num) {
+                                                            return sum + num}
+                                                       );
+                                     return sum || 0
+                                 }
+                                );
     };
 
 
@@ -58,9 +89,15 @@ var users = (function() {
     };
 
     var free = function(name) {
-        _.remove(users, function (item){
-            return item.name == name;
-        });
+        //OBS added group leaving without testing
+        var userIndex = _.findIndex(users, {'name' : name});
+        if (userIndex != -1){
+            var user = users[userIndex];
+            if (user.group){
+                groups[user.group].pop(user);
+            }
+            users.pop(user);
+        }
     };
 
     var giveScore = function (score, name){
@@ -81,15 +118,20 @@ var users = (function() {
         get: get,
         setGroup : setGroup,
         getGroups : getGroups,
+        getGroupScore : getGroupScore,
+        getGroupsScore : getGroupsScore,
         giveScore : giveScore
     };
 }());
 
 // export function for listening to the socket
 module.exports = function(socket) {
-
+    function sendUserListUpdate(){
+        
+    };
     var leaderList = buzzBoard.get();
-
+    
+    
     // send the new user their name and a list of users
     socket.emit('server:init', {
         users: users.get(),
@@ -121,9 +163,7 @@ module.exports = function(socket) {
         console.log("we have a buzz from: " + data);
         var res = buzzBoard.registerPress(data);
         socket.broadcast.emit('server:buzz:update', buzzBoard.get());
-        console.log(res);
         fn(res);
-        console.log(buzzBoard.get());
     });
 
     socket.on('gamemaster:newround', function (fn){
@@ -144,21 +184,20 @@ module.exports = function(socket) {
             socket.broadcast.emit('server:update:user', {
                 users : users.get()
             });
+            //send scoreboard to gamemaster
+            socket.emit('server:score:update', users.getGroupsScore());
         }
     });
 
     socket.on('gamemaster:wrong', function (user){
+        //what should we do if the user answers wrong?
+        //buzz again?
         console.log("wrong:" + user);
     });
 
     socket.on('gamemaster:group:adduser', function (data){
-        console.log(data);
         var status = users.setGroup(data.user, data.group);
-        console.log(status);
         if (status){
-            console.log("emitting updated groups");
-            console.log(users.get());
-
             socket.emit('server:update:user', {
                 users : users.get()
             });
@@ -168,6 +207,10 @@ module.exports = function(socket) {
         }
     });
 
+    socket.on('getGroupScore', function(group, fn){
+        var totalScore = users.getGroupScore(group);
+        fn(totalScore);
+    });
     // clean up when a user leaves, and broadcast it to other users
     /*
     socket.on('disconnect', function() {

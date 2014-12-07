@@ -2,6 +2,7 @@
 
 angular.module('buzzerApp')
     .controller('GamemasterCtrl', function ($scope, socket) {
+        var groupData = {};
         $scope.users = [];
         $scope.gamemaster = {};
         $scope.buzzqueue = [];
@@ -12,7 +13,7 @@ angular.module('buzzerApp')
         socket.on("server:init", function(data){
             $scope.users = data.users;
             $scope.groups.registered = _.keys(data.groups);
-            console.log(data.groups);
+            groupData = data.groups;
         });
 
         socket.on("server:update:user", function (data){
@@ -23,6 +24,10 @@ angular.module('buzzerApp')
             $scope.buzzqueue = data;
         });
 
+        socket.on('server:score:update', function(score){
+            console.log(score);
+        });
+        
         $scope.gamemaster.startRound = function (){
             socket.emit("gamemaster:newround");
             $scope.buzzqueue = [];
@@ -33,7 +38,7 @@ angular.module('buzzerApp')
             socket.emit("gamemaster:correct", user);
         };
 
-        $scope.gamemaster.wrong = function (user){
+        $scope.gamemaster.wrong = function (user){            
             socket.emit("gamemaster:wrong", user);
         };
 
@@ -43,10 +48,11 @@ angular.module('buzzerApp')
 
         $scope.gamemaster.addToGroup = function (user){
             socket.emit("gamemaster:group:adduser", {
-                group : $scope.groups.newgroup,
-                user : user
+                group : user.group,
+                user : user.name
             });
         };
 
+        
 
     });

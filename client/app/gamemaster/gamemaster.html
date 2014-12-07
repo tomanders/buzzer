@@ -28,9 +28,9 @@
                 <td>{{user.name}}</td>
                 <td>{{user.score}}</td>
                 <td>
-                    <select ng-model="groups.newgroup"
+                    <select ng-model="user.group"
                             ng-options="group for group in groups.registered"
-                            ng-change="gamemaster.addToGroup(user.name)">
+                            ng-change="gamemaster.addToGroup(user)">
                         <option value="">-- choose group --</option>
                     </select>
                 </td>
