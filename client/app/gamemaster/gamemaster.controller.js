@@ -8,8 +8,8 @@ angular.module('buzzerApp')
         $scope.buzzqueue = [];
         $scope.roundButtonText = "Start round!";
         $scope.groups = {};
-        $scope.groups.registered = {};
-
+        $scope.groups.registered = $scope.groups.scoreboard = {};
+        
         socket.on("server:init", function(data){
             $scope.users = data.users;
             $scope.groups.registered = _.keys(data.groups);
@@ -25,9 +25,9 @@ angular.module('buzzerApp')
         });
 
         socket.on('server:score:update', function(score){
-            console.log(score);
+            $scope.groups.scoreboard = score;
         });
-        
+
         $scope.gamemaster.startRound = function (){
             socket.emit("gamemaster:newround");
             $scope.buzzqueue = [];
@@ -38,7 +38,7 @@ angular.module('buzzerApp')
             socket.emit("gamemaster:correct", user);
         };
 
-        $scope.gamemaster.wrong = function (user){            
+        $scope.gamemaster.wrong = function (user){
             socket.emit("gamemaster:wrong", user);
         };
 
@@ -53,6 +53,6 @@ angular.module('buzzerApp')
             });
         };
 
-        
+
 
     });

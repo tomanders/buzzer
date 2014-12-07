@@ -15,62 +15,57 @@ var users = (function() {
 
     //group handling
     var setGroup = function(name, group){
-        //OBS, something is of here, when changing groups after a while
-        // something goes wrong, another user gets transfered..
-        // test with gamemaster and give a score and change groups several times.
-        
         var userIndex = _.findIndex(users, {'name' : name});
         if (!name || userIndex == -1) {
             return false;
         } else {
-            console.log(group);
             var groupExists = _.contains(_.keys(groups), group);
             var user = users[userIndex];
-            
-            if (groupExists){
-                //check if user is in another group and remove before changing.
-                if (user.group){
-                    groups[user.group].pop(user);
-                }
-                groups[group].push(users[userIndex]);
-            }else{
-                groups[group] = [users[userIndex],];
+            //check if user is in another group and remove before changing.
+            if (user.group){
+                _.remove(groups[user.group], user);
+                user.group = false;
             }
-            users[userIndex].group = group;
+            //push and add group to user if exists, else user is groupless
+            if (groupExists){
+                groups[group].push(user);
+                user.group = group;                
+            }
             return true;
         }
     };
 
+    var createGroup = function (group){
+        var groupExists = _.contains(_.keys(groups), group);
+        if (!groupExists){
+            groups[group] = [];
+            return true;
+        }
+        return false;
+    }
+    
     var getGroups = function (){
         return groups;
     };
 
+    var getGroupsScore = function (){
+        return totals =
+            _.mapValues(groups,
+                        function (users) {
+                            var score = _.pluck(users, 'score');
+                            var sum = _.reduce(score,
+                                               function(sum, num) {
+                                                   return sum + num}
+                                              );
+                            return sum || 0
+                        }
+                       );
+    };
+    
     var getGroupScore = function (group){
-        var totals = _.mapValues(groups,
-                                 function (users) {
-                                     var score = _.pluck(users, 'score');
-                                     var sum = _.reduce(score,
-                                                        function(sum, num) {
-                                                            return sum + num}
-                                                       );
-                                     return sum || 0
-                                 }
-                                );
+        var totals = getGroupsScore();
         return totals[group];
     };
-    var getGroupsScore = function (){
-        return totals = _.mapValues(groups,
-                                 function (users) {
-                                     var score = _.pluck(users, 'score');
-                                     var sum = _.reduce(score,
-                                                        function(sum, num) {
-                                                            return sum + num}
-                                                       );
-                                     return sum || 0
-                                 }
-                                );
-    };
-
 
     //user handling
     var claim = function(name) {
@@ -89,14 +84,13 @@ var users = (function() {
     };
 
     var free = function(name) {
-        //OBS added group leaving without testing
         var userIndex = _.findIndex(users, {'name' : name});
         if (userIndex != -1){
             var user = users[userIndex];
             if (user.group){
-                groups[user.group].pop(user);
+                _.remove(groups[user.group], user);
             }
-            users.pop(user);
+            _.remove(users, user);
         }
     };
 
@@ -108,7 +102,6 @@ var users = (function() {
         }
 
         users[userIndex].score = users[userIndex].score + score;
-        console.log(users);
         return true;
 
     }
@@ -116,6 +109,7 @@ var users = (function() {
         claim: claim,
         free: free,
         get: get,
+        createGroup : createGroup,
         setGroup : setGroup,
         getGroups : getGroups,
         getGroupScore : getGroupScore,
@@ -126,9 +120,6 @@ var users = (function() {
 
 // export function for listening to the socket
 module.exports = function(socket) {
-    function sendUserListUpdate(){
-        
-    };
     var leaderList = buzzBoard.get();
     
     
@@ -154,15 +145,21 @@ module.exports = function(socket) {
     // remove user, and broadcast all users
     socket.on('players:killuser', function(data) {
         users.free(data.name);
+        buzzBoard.killUser(data.name);
+        console.log(buzzBoard.get());
+        socket.broadcast.emit('server:buzz:update', buzzBoard.get());
         socket.broadcast.emit('server:update:user', {
             users: users.get()
         });
+        //send scoreboard to gamemaster
+        socket.broadcast.emit('server:score:update', users.getGroupsScore());
+
     });
 
     socket.on('players:buzz', function (data, fn){
-        console.log("we have a buzz from: " + data);
         var res = buzzBoard.registerPress(data);
         socket.broadcast.emit('server:buzz:update', buzzBoard.get());
+        //trigger callback with first buzz or not
         fn(res);
     });
 
@@ -172,11 +169,8 @@ module.exports = function(socket) {
     });
 
     socket.on('gamemaster:correct', function (user){
-        console.log("correct: " + user);
         var score = 10;
         var scoreGiven = users.giveScore(score, user);
-        console.log("gave score: " + scoreGiven);
-        console.log(users.getGroups());
         if (scoreGiven){
             socket.emit('server:update:user', {
                 users : users.get()
@@ -204,6 +198,8 @@ module.exports = function(socket) {
             socket.broadcast.emit('server:update:user', {
                 users : users.get()
             });
+            //send scoreboard to gamemaster
+            socket.emit('server:score:update', users.getGroupsScore());
         }
     });
 

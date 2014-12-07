@@ -25,11 +25,19 @@ var buzzList =  function (){
     var clearRound = function(){
         buzzlist = [];
     }
+    var killUser = function (name){
+        console.log("buzzBoard: removing " + name);
+        console.log(buzzlist);
+        _.remove(buzzlist, function (user ){ return name == user});
+        console.log(buzzlist);
+
+    }
     
     return {
         registerPress : registerPress,
         get : get,
-        clearRound : clearRound
+        clearRound : clearRound,
+        killUser : killUser
     };
 };
 
